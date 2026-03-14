@@ -135,6 +135,7 @@
     "swat4"         => "SWAT 4",
     "teeworlds"     => "Teeworlds",
     "terraria"      => "Terraria",
+	"tetrinet"      => "TetriNET",
     "tribes"        => "Tribes ( Starsiege )",
     "tribes2"       => "Tribes 2",
     "tribesv"       => "Tribes Vengeance",
@@ -293,6 +294,7 @@
     "test"          => "01",
     "teeworlds"     => "21",
     "terraria"      => "38",
+    "tetrinet"      => "53",
     "tribes"        => "23",
     "tribes2"       => "25",
     "tribesv"       => "09",
@@ -436,6 +438,7 @@
     "test"          => "http://www.greycube.com",
     "teeworlds"     => "steam://connect/{IP}:{C_PORT}",
     "terraria"      => "steam://connect/{IP}:{C_PORT}",
+	"tetrinet"      => "tnet//{IP}:{C_PORT}",
     "tribes"        => "qtracker://{IP}:{S_PORT}?game=Tribes&action=show",
     "tribes2"       => "qtracker://{IP}:{S_PORT}?game=Tribes2&action=show",
     "tribesv"       => "qtracker://{IP}:{S_PORT}?game=TribesVengeance&action=show",
@@ -485,6 +488,7 @@
     "ragemp"        => "http",
     "scum"          => "http",
     "terraria"      => "http",
+    "tetrinet"      => "tcp",
     "ts"            => "tcp",
     "ts3"           => "tcp",
     "teaspeak"      => "tcp",
@@ -544,6 +548,7 @@
       case "starwarsrc"    : $c_to_q = 0;     $c_def = 7777;    $q_def = 11138;   $c_to_s = 0;   break;
       case "swat4"         : $c_to_q = 1;     $c_def = 10780;   $q_def = 10781;   $c_to_s = 0;   break;
       case "terraria"      : $c_to_q = 101;   $c_def = 7777;    $q_def = 7878;    $c_to_s = 0;   break;
+      case "tetrinet"      : $c_to_q = 0;     $c_def = 31457;   $q_def = 31457;   $c_to_s = 0;   break;
       case "tribesv"       : $c_to_q = 1;     $c_def = 7777;    $q_def = 7778;    $c_to_s = 0;   break;
       case "ts"            : $c_to_q = 0;     $c_def = 8767;    $q_def = 51234;   $c_to_s = 0;   break;
       case "ts3"           : $c_to_q = 0;     $c_def = 9987;    $q_def = 10011;   $c_to_s = 0;   break;
@@ -856,11 +861,12 @@
     $server['s']['players'] = empty($part['2']) ? 0 : count($part) - 2;
 
     if (isset($server['e']['maxclients']))    { $server['s']['playersmax'] = $server['e']['maxclients']; }    // QUAKE 2
-    if ($server['b']['type'] == "wolfrtcw" && isset($server['e']['sv_maxcoopclients'])) {                     // RTCWCOOP FIX
+    if ($server['b']['type'] == "wolfrtcw" && isset($server['e']['sv_maxcoopclients'])) {
         $server['s']['playersmax'] = $server['e']['sv_maxcoopclients'];
-    } else if (isset($server['e']['sv_maxclients'])) {                                                        // GENERIC
+    } else if (isset($server['e']['sv_maxclients'])) {
         $server['s']['playersmax'] = $server['e']['sv_maxclients'];
     }
+
     if (isset($server['e']['pswrd']))      { $server['s']['password'] = $server['e']['pswrd']; }              // CALL OF DUTY
     if (isset($server['e']['needpass']))   { $server['s']['password'] = $server['e']['needpass']; }           // QUAKE 2
     if (isset($server['e']['g_needpass'])) { $server['s']['password'] = (int)$server['e']['g_needpass']; }
@@ -4546,6 +4552,16 @@
     $server['e']['version'] = "v{$find['attributes']['BUILDID_s']}.{$find['attributes']['MINORBUILDID_s']}";
     return true;
   }
+  
+  function lgsl_query_53(&$server, &$lgsl_need, &$lgsl_fp) { // TetriNET
+	fwrite($lgsl_fp, "version\xFF");
+	$buffer = fread($lgsl_fp, 4096);
+	if (!$buffer) return FALSE;
+	$server['e']['version'] = trim(str_replace("+OK", "", $buffer));
+
+
+	return TRUE;
+  }
 //------------------------------------------------------------------------------------------------------------+
 //------------------------------------------------------------------------------------------------------------+
 
@@ -4773,7 +4789,7 @@ function lgsl_unescape($text) {
       break;
 
       case "minecraft":
-        $string = preg_replace("/[�§]\w/S", "", $string);
+        $string = preg_replace("/[ §]\w/S", "", $string);
       break;
 
       case "factorio":
