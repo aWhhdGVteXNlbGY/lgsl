@@ -4563,7 +4563,7 @@
 	$buffer = fread($lgsl_fp, 4096);
 	if (!$buffer) return FALSE;
 	$buffer = trim(str_replace("+OK", "", $buffer));
-	if (!empty($buffer)) {
+	if (!empty($buffer) && strlen($buffer > 0)) {
 		$buffer = explode("\n", $buffer);
 		for ($i=0; $i<count($buffer); $i++) {
 			if (count($buffer) > 0) {
@@ -4575,6 +4575,19 @@
 					$server['p'][$i]['team'] = $matches[2];
 				}
 			}
+		}
+	}
+	
+	fwrite($lgsl_fp, "listchan\xFF");
+	$buffer = fread($lgsl_fp, 4096);
+	if (!$buffer) return FALSE;	
+	$buffer = trim(str_replace("+OK", "", $buffer));
+	$buffer = explode("\n", $buffer);
+	$server['e']['channels'] = '';
+	foreach ($buffer as $chans) {
+		$pattern = '/"([^"]+)" "([^"]*)" (\d+) (\d+)/';
+		if (preg_match($pattern, $chans, $matches)) {
+			$server['e']['channels'] .= lgsl_unescape($matches[1]) . "\n";
 		}
 	}
 
