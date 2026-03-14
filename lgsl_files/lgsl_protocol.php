@@ -4563,15 +4563,17 @@
 	$buffer = fread($lgsl_fp, 4096);
 	if (!$buffer) return FALSE;
 	$buffer = trim(str_replace("+OK", "", $buffer));
-	$buffer = explode("\n", $buffer);
-	for ($i=0; $i<count($buffer); $i++) {
-		if (count($buffer) > 0) {
-			$server['s']['players'] = count($buffer) - 1;
+	if (!empty($buffer)) {
+		$buffer = explode("\n", $buffer);
+		for ($i=0; $i<count($buffer); $i++) {
+			if (count($buffer) > 0) {
+				$server['s']['players'] = count($buffer);
 			
-			$pattern = '/^"([^"]*)"\s+"([^"]*)"\s+"([^"]*)"\s+[\d\s]+\s+"([^"]*)"$/';
-			if (preg_match($pattern, $buffer[$i], $matches)) {
-				$server['p'][$i]['name'] = $matches[1];
-				$server['p'][$i]['team'] = $matches[2];
+				$pattern = '/^"([^"]*)"\s+"([^"]*)"\s+"([^"]*)"\s+[\d\s]+\s+"([^"]*)"$/';
+				if (preg_match($pattern, $buffer[$i], $matches)) {
+					$server['p'][$i]['name'] = $matches[1];
+					$server['p'][$i]['team'] = $matches[2];
+				}
 			}
 		}
 	}
