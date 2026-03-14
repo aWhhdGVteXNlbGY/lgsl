@@ -438,7 +438,7 @@
     "test"          => "http://www.greycube.com",
     "teeworlds"     => "steam://connect/{IP}:{C_PORT}",
     "terraria"      => "steam://connect/{IP}:{C_PORT}",
-	"tetrinet"      => "tnet//{IP}:{C_PORT}",
+    "tetrinet"      => "tnet://{IP}:{C_PORT}",
     "tribes"        => "qtracker://{IP}:{S_PORT}?game=Tribes&action=show",
     "tribes2"       => "qtracker://{IP}:{S_PORT}?game=Tribes2&action=show",
     "tribesv"       => "qtracker://{IP}:{S_PORT}?game=TribesVengeance&action=show",
@@ -861,9 +861,9 @@
     $server['s']['players'] = empty($part['2']) ? 0 : count($part) - 2;
 
     if (isset($server['e']['maxclients']))    { $server['s']['playersmax'] = $server['e']['maxclients']; }    // QUAKE 2
-    if ($server['b']['type'] == "wolfrtcw" && isset($server['e']['sv_maxcoopclients'])) {
+    if ($server['b']['type'] == "wolfrtcw" && isset($server['e']['sv_maxcoopclients'])) { // RTCWCOOP FIX
         $server['s']['playersmax'] = $server['e']['sv_maxcoopclients'];
-    } else if (isset($server['e']['sv_maxclients'])) {
+    } else if (isset($server['e']['sv_maxclients'])) { // GENERIC
         $server['s']['playersmax'] = $server['e']['sv_maxclients'];
     }
 
@@ -4559,6 +4559,22 @@
 	if (!$buffer) return FALSE;
 	$server['e']['version'] = trim(str_replace("+OK", "", $buffer));
 
+	fwrite($lgsl_fp, "listuser\xFF");
+	$buffer = fread($lgsl_fp, 4096);
+	if (!$buffer) return FALSE;
+	$buffer = trim(str_replace("+OK", "", $buffer));
+	$buffer = explode("\n", $buffer);
+	for ($i=0; $i<count($buffer); $i++) {
+		if (count($buffer) > 0) {
+			$server['s']['players'] = count($buffer) - 1;
+			
+			$pattern = '/^"([^"]*)"\s+"([^"]*)"\s+"([^"]*)"\s+[\d\s]+\s+"([^"]*)"$/';
+			if (preg_match($pattern, $buffer[$i], $matches)) {
+				$server['p'][$i]['name'] = $matches[1];
+				$server['p'][$i]['team'] = $matches[2];
+			}
+		}
+	}
 
 	return TRUE;
   }
@@ -4789,7 +4805,7 @@ function lgsl_unescape($text) {
       break;
 
       case "minecraft":
-        $string = preg_replace("/[ §]\w/S", "", $string);
+        $string = preg_replace("/[[�§]\w/S", "", $string);
       break;
 
       case "factorio":
