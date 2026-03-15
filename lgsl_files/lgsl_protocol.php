@@ -4559,37 +4559,52 @@
 	if (!$buffer) return FALSE;
 	$server['e']['version'] = trim(str_replace("+OK", "", $buffer));
 
+	fwrite($lgsl_fp, "playerquery\xFF");
+	$buffer = fread($lgsl_fp, 4096);
+	if (!$buffer) return FALSE;
+	$server['s']['players'] = trim(str_replace("Number of players logged in: ", "", $buffer));
+
 	fwrite($lgsl_fp, "listuser\xFF");
 	$buffer = fread($lgsl_fp, 4096);
 	if (!$buffer) return FALSE;
 	$buffer = trim(str_replace("+OK", "", $buffer));
-	if (!empty($buffer) && strlen($buffer > 0)) {
-		$buffer = explode("\n", $buffer);
-		for ($i=0; $i<count($buffer); $i++) {
-			if (count($buffer) > 0) {
-				$server['s']['players'] = count($buffer);
-			
-				$pattern = '/^"([^"]*)"\s+"([^"]*)"\s+"([^"]*)"\s+[\d\s]+\s+"([^"]*)"$/';
-				if (preg_match($pattern, $buffer[$i], $matches)) {
-					$server['p'][$i]['name'] = $matches[1];
-					$server['p'][$i]['team'] = $matches[2];
-				}
-			}
-		}
+	$buffer = explode("\n", $buffer);
+	foreach ($buffer as $players_i => $players) {
+		$players = trim($players);
+		if (empty($players)) continue;
+
+		$data = str_getcsv($players, ' ', '"');
+		$server['p'][$players_i]['name'] = $data[0];
+		$server['p'][$players_i]['team'] = $data[1];
 	}
-	
+
 	fwrite($lgsl_fp, "listchan\xFF");
 	$buffer = fread($lgsl_fp, 4096);
 	if (!$buffer) return FALSE;	
 	$buffer = trim(str_replace("+OK", "", $buffer));
 	$buffer = explode("\n", $buffer);
 	$server['e']['channels'] = '';
+	$total_players = 0;
+	$total_max = 0;
+	$max_priority = -1;
 	foreach ($buffer as $chans) {
-		$pattern = '/"([^"]+)" "([^"]*)" (\d+) (\d+)/';
-		if (preg_match($pattern, $chans, $matches)) {
-			$server['e']['channels'] .= lgsl_unescape($matches[1]) . "\n";
+		$chans = trim($chans);
+		if (empty($chans)) continue;
+
+		$data = str_getcsv($chans, ' ', '"');
+		$count_now = isset($data[2]) ? (int)$data[2] : 0;
+		$max_now = isset($data[3]) ? (int)$data[3] : 0;
+		$cur_priority = isset($data[4]) ? (int)$data[4] : 0;
+		if ($cur_priority > $max_priority) {
+			$max_priority = $cur_priority;
+			$server['s']['map'] = $data[0];
 		}
+		$total_players = $total_players + $count_now;
+		$total_max = $total_max + $max_now;
+
+		$server['e']['channels'] .= lgsl_unescape($data[0]) . "\n";
 	}
+	$server['s']['playersmax'] = ($total_max > 0) ? $total_max : 6;
 
 	return TRUE;
   }
