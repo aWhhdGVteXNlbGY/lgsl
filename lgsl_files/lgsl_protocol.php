@@ -4580,7 +4580,7 @@
 			$players_count++;
 		}
 	}
-	if ($server['s']['players'] == 0) { $server['s']['players'] = $players_count; }
+	if ($server['s']['players'] == 0 && $players_count > 0) { $server['s']['players'] = $players_count; }
 
 	fwrite($lgsl_fp, "listchan\xFF");
 	$buffer = fread($lgsl_fp, 4096);
