@@ -4579,10 +4579,8 @@
 
 		// Readd playercount if "playerquery" doesn't works
 		if ($server['s']['players'] == 0 && $server['s']['players'] < 1) {
-			if ($players_i == 0) {
+			if ($server['s']['players'] > 1) {
 				$server['s']['players'] = $players_i + 1;
-			} else {
-				$server['s']['players'] = $players_i;
 			}
 		}
 	}
