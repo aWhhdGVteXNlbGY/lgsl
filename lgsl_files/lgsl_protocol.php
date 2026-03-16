@@ -4567,16 +4567,20 @@
 	fwrite($lgsl_fp, "listuser\xFF");
 	$buffer = fread($lgsl_fp, 4096);
 	if (!$buffer) return FALSE;
-	$buffer = trim(str_replace("+OK", "", $buffer));
-	$buffer = explode("\n", $buffer);
-	foreach ($buffer as $players_i => $players) {
+	$buffer = explode("\n", trim(str_replace("+OK", "", $buffer)));
+	$players_count = 0;
+	foreach ($buffer as $players) {
 		$players = trim($players);
 		if (empty($players)) continue;
 
 		$data = str_getcsv($players, ' ', '"');
-		$server['p'][$players_i]['name'] = $data[0];
-		$server['p'][$players_i]['team'] = $data[1];
+		if (isset($data[0]) && $data[0] !== "") {
+			$server['p'][$players_count]['name'] = lgsl_unescape($data[0]);
+			$server['p'][$players_count]['team'] = lgsl_unescape($data[1]);
+			$players_count++;
+		}
 	}
+	if ($server['s']['players'] == 0) { $server['s']['players'] = $players_count; }
 
 	fwrite($lgsl_fp, "listchan\xFF");
 	$buffer = fread($lgsl_fp, 4096);
