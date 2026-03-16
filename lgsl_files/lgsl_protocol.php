@@ -4576,6 +4576,15 @@
 		$data = str_getcsv($players, ' ', '"');
 		$server['p'][$players_i]['name'] = $data[0];
 		$server['p'][$players_i]['team'] = $data[1];
+
+		// Readd playercount if "playerquery" doesn't works
+		if ($server['s']['players'] == 0 && $server['s']['players'] < 1) {
+			if ($players_i == 0) {
+				$server['s']['players'] = $players_i + 1;
+			} else {
+				$server['s']['players'] = $players_i;
+			}
+		}
 	}
 
 	fwrite($lgsl_fp, "listchan\xFF");
